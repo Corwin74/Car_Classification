@@ -1,0 +1,5 @@
+/input/*
+/working/*
+.ipynb_checkpoints/*
+best_model.hdfl5
+
