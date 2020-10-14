@@ -61,9 +61,9 @@ BATCH_SIZE           = 8 # уменьшаем batch если сеть больш
 BATCH_SIZE_STEP4     = 2 # Размер batch на шаге с увеличенными изображениями
 
 # Epochs
-EPOCHS_STEP1         = 10  
-EPOCHS_STEP2         = 10  
-EPOCHS_STEP3         = 10   
+EPOCHS_STEP1         = 20  
+EPOCHS_STEP2         = 20  
+EPOCHS_STEP3         = 20   
 EPOCHS_STEP4         = 7  
 
 # Learning Rates
@@ -301,7 +301,7 @@ augment = AUGMENT
 cycles = CYCLES
 
 # Расчет количества итерация и шага изменения learning rate
-iterations = round(train_generator.samples//train_generator.batch_size*epochs)
+iterations = round(train_generator.samples//train_generator.batch_size*EPOCHS_STEP1)
 iterations = list(range(0,iterations+1))
 step_size = len(iterations)/(cycles)
 
@@ -366,7 +366,7 @@ for layer in model.layers:
 # Вновь обучаем модель, используя One Cycle Policy для Learning Rate
 
 # Расчет количества итерация и шага изменения learning rate
-iterations = round(train_generator.samples//train_generator.batch_size*epochs)
+iterations = round(train_generator.samples//train_generator.batch_size*EPOCHS_STEP2)
 iterations = list(range(0,iterations+1))
 step_size = len(iterations)/(cycles)
 
@@ -386,7 +386,7 @@ history = model.fit(
     train_generator,
     steps_per_epoch=train_generator.samples//train_generator.batch_size,
     validation_data = test_generator, 
-    validation_steps = train_generator.samples//train_generator.batch_size,
+    validation_steps = test_generator.samples//test_generator.batch_size,
     epochs = EPOCHS_STEP2,
     callbacks = [checkpoint, earlystop, clr2]
 )
@@ -396,7 +396,7 @@ model.save('../working/model_step2.hdf5')
 model.load_weights('best_model.hdf5')
 
 
-scores = model.evaluate_generator(test_generator, verbose=1)
+scores = model.evaluate(test_generator, verbose=1)
 print("Accuracy: %.2f%%" % (scores[1]*100))
 
 
@@ -444,8 +444,8 @@ history = model.fit(
     train_generator,
     steps_per_epoch=train_generator.samples//train_generator.batch_size,
     validation_data = test_generator, 
-    validation_steps = train_generator.samples//train_generator.batch_size,
-    epochs = epochs,
+    validation_steps = test_generator.samples//test_generator.batch_size,
+    epochs = EPOCHS_STEP3,
     callbacks = [checkpoint, earlystop, clr3]
 )
 
@@ -454,5 +454,5 @@ model.save('../working/model_step3.hdf5')
 model.load_weights('best_model.hdf5')
 
 
-scores = model.evaluate_generator(test_generator, verbose=1)
+scores = model.evaluate(test_generator, verbose=1)
 print("Accuracy: %.2f%%" % (scores[1]*100))

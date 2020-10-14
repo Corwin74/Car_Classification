@@ -6,6 +6,7 @@ from keras.losses import binary_crossentropy
 from keras.metrics import binary_accuracy
 from keras import backend as K
 from keras.callbacks import *
+import numpy as np
 
 class CyclicLR(keras.callbacks.Callback):
     
