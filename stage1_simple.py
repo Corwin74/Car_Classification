@@ -5,10 +5,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-#import pickle
-#import scipy.io
-#from skimage import io
-#import csv
 import sys
 import os
 
@@ -165,7 +161,7 @@ model.compile(loss="categorical_crossentropy", optimizer=optimizers.Adam(lr=LR_S
 
 # Добавим ModelCheckpoint чтоб сохранять прогресс обучения модели и можно было потом подгрузить и дообучить модель.
     
-checkpoint = ModelCheckpoint('best_model.hdf5' , monitor = ['val_accuracy'] , verbose = 1  , mode = 'max')
+checkpoint = ModelCheckpoint('weights.{epoch:02d}-{val_loss:.2f}.hdf5' , monitor = ['val_accuracy'] , verbose = 1  , mode = 'max')
 earlystop = EarlyStopping(monitor='val_accuracy', patience=5, restore_best_weights=True)
 
 # Обучаем
@@ -175,14 +171,17 @@ history = model.fit(
     validation_data = test_generator, 
     validation_steps = test_generator.samples//test_generator.batch_size,
     epochs=EPOCHS_STEP1,
-    callbacks=[checkpoint, earlystop]
+    callbacks=[checkpoint, earlystop],
+    verbose=2
     )
 
-scores = model.evaluate(test_generator, verbose=1)
+scores = model.evaluate(test_generator, verbose=2)
 print("Accuracy: %.2f%%" % (scores[1]*100))
 
 # Сохраним итоговую сеть и подгрузим лучшую итерацию в обучении (best_model)
 model.save('../working/model_step1.hdf5')
+
+weights_name = input('Input name of weights file')
 model.load_weights('best_model.hdf5')
 
 
@@ -210,12 +209,14 @@ history = model.fit(
     validation_data = test_generator, 
     validation_steps = test_generator.samples//test_generator.batch_size,
     epochs = EPOCHS_STEP2,
-    callbacks = [checkpoint, earlystop]
+    callbacks = [checkpoint, earlystop],
+    verbose=2
 )
 
 # Сохраним модель
 model.save('../working/model_step2.hdf5')
-model.load_weights('best_model.hdf5')
+weights_name = input('Input name of weights file')
+model.load_weights('weights_name')
 
 
 scores = model.evaluate(test_generator, verbose=1)
@@ -238,11 +239,13 @@ history = model.fit(
     validation_data = test_generator, 
     validation_steps = test_generator.samples//test_generator.batch_size,
     epochs = EPOCHS_STEP3,
-    callbacks = [checkpoint, earlystop]
+    callbacks = [checkpoint, earlystop],
+    verbose=2
 )
 
 model.save('../working/model_step3.hdf5')
-model.load_weights('best_model.hdf5')
+weights_name = input('Input name of weights file')
+model.load_weights('weights_name')
 
 
 scores = model.evaluate(test_generator, verbose=1)
