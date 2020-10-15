@@ -55,12 +55,11 @@ BATCH_SIZE_STEP4     = 2 # Размер batch на шаге с увеличен�
 EPOCHS_STEP1         = 20  
 EPOCHS_STEP2         = 20  
 EPOCHS_STEP3         = 20   
-EPOCHS_STEP4         = 7  
 
 # Learning Rates
-LR_STEP1             = 1e-3
-LR_STEP2             = 1e-4
-LR_STEP3             = 1e-5
+LR_STEP1             = 0.001
+LR_STEP2             = 0.0001
+LR_STEP3             = 0.00001
 LR_STEP4             = 1e-5
 
 # Test-validation split
@@ -80,6 +79,7 @@ PYTHONHASHSEED = 0
 
 DATA_PATH = '/home/alex/Car_Classification/input/'
 sample_submission = pd.read_csv(DATA_PATH + "sample-submission.csv")
+MODEL_PATH = '/home/alex/Car_Classification/model/'
 
 # Аугментация данных очень важна когда у нас не большой датасет (как в нашем случае)
 
@@ -160,8 +160,9 @@ model.add(L.Dense(CLASS_NUM, activation='softmax'))
 model.compile(loss="categorical_crossentropy", optimizer=optimizers.Adam(lr=LR_STEP1), metrics=["accuracy"])
 
 # Добавим ModelCheckpoint чтоб сохранять прогресс обучения модели и можно было потом подгрузить и дообучить модель.
-    
-checkpoint = ModelCheckpoint('weights.{epoch:02d}-{val_loss:.2f}.hdf5' , monitor = ['val_accuracy'] , verbose = 1  , mode = 'max')
+
+
+checkpoint = ModelCheckpoint(MODEL_PATH+'step1-{epoch:02d}-{val_loss:.4f}.hdf5' , monitor = ['val_accuracy'] , verbose = 1, mode = 'max')
 earlystop = EarlyStopping(monitor='val_accuracy', patience=5, restore_best_weights=True)
 
 # Обучаем
@@ -176,13 +177,15 @@ history = model.fit(
     )
 
 scores = model.evaluate(test_generator, verbose=2)
-print("Accuracy: %.2f%%" % (scores[1]*100))
+print("Accuracy step1: %.2f%%" % (scores[1]*100))
 
 # Сохраним итоговую сеть и подгрузим лучшую итерацию в обучении (best_model)
 model.save('../working/model_step1.hdf5')
 
-weights_name = input('Input name of weights file')
-model.load_weights('best_model.hdf5')
+while not os.path.isfile(weights_name := input('Input name of weights file: ')):
+    print("File not exist!")
+
+model.load_weights(MODEL_PATH+weights_name)
 
 
 # ## Step 2 - FineTuning - обучение половины весов EfficientNetb6
@@ -201,26 +204,30 @@ for layer in base_model.layers[:fine_tune_at]:
 len(base_model.trainable_variables)
 
 model.compile(loss="categorical_crossentropy", optimizer=optimizers.Adam(lr=LR_STEP2), metrics=["accuracy"])
+checkpoint2 = ModelCheckpoint(MODEL_PATH+'step2-{epoch:02d}-{val_loss:.4f}.hdf5' , monitor = ['val_accuracy'] , verbose = 1, mode = 'max')
 
 # Обучаем
+
 history = model.fit(
     train_generator,
     steps_per_epoch=train_generator.samples//train_generator.batch_size,
     validation_data = test_generator, 
     validation_steps = test_generator.samples//test_generator.batch_size,
     epochs = EPOCHS_STEP2,
-    callbacks = [checkpoint, earlystop],
+    callbacks = [checkpoint2, earlystop],
     verbose=2
 )
 
+scores = model.evaluate(test_generator, verbose=2)
+print("Accuracy step2: %.2f%%" % (scores[1]*100))
+
 # Сохраним модель
+
 model.save('../working/model_step2.hdf5')
-weights_name = input('Input name of weights file')
-model.load_weights('weights_name')
 
-
-scores = model.evaluate(test_generator, verbose=1)
-print("Accuracy: %.2f%%" % (scores[1]*100))
+while not os.path.isfile(weights_name := input('Input name of weights file: ')):
+    print("File not exist!")
+model.load_weights(MODEL_PATH + weights_name)
 
 
 # ## Step 3 - FineTuning - разморозка всей сети EfficientNetB6 и дообучение
@@ -232,21 +239,19 @@ base_model.trainable = True
 
 LR=0.00001
 model.compile(loss="categorical_crossentropy", optimizer=optimizers.Adam(lr=LR_STEP3), metrics=["accuracy"])
- 
+checkpoint3 = ModelCheckpoint(MODEL_PATH + 'step3-{epoch:02d}-{val_loss:.4f}.hdf5' , monitor = ['val_accuracy'] , verbose = 1, mode = 'max')
+
 history = model.fit(
     train_generator,
     steps_per_epoch=train_generator.samples//train_generator.batch_size,
     validation_data = test_generator, 
     validation_steps = test_generator.samples//test_generator.batch_size,
     epochs = EPOCHS_STEP3,
-    callbacks = [checkpoint, earlystop],
+    callbacks = [checkpoint3, earlystop],
     verbose=2
 )
 
-model.save('../working/model_step3.hdf5')
-weights_name = input('Input name of weights file')
-model.load_weights('weights_name')
+model.save(MODEL_PATH+'model_step3.hdf5')
 
-
-scores = model.evaluate(test_generator, verbose=1)
-print("Accuracy: %.2f%%" % (scores[1]*100))
+scores = model.evaluate(test_generator, verbose=2)
+print("Accuracy step3: %.2f%%" % (scores[1]*100))

@@ -3,3 +3,5 @@
 .ipynb_checkpoints/*
 best_model.hdf5
 __pycache__
+/model/*
+
