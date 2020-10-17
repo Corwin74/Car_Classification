@@ -1,0 +1,118 @@
+Python       : 3.8.5 (default, Jul 28 2020, 12:59:40) 
+Numpy        : 1.18.5
+Tensorflow   : 2.4.0
+Keras        : 2.4.0
+1 Physical GPUs, 1 Logical GPUs
+Found 12452 images belonging to 10 classes.
+Found 3109 images belonging to 10 classes.
+Epoch 1/40
+1556/1556 - 160s - loss: 1.6914 - accuracy: 0.4131 - val_loss: 1.1541 - val_accuracy: 0.5815
+
+Epoch 00001: saving model to /home/alex/Car_Classification/model/step1-01-1.1541.hdf5
+Epoch 2/40
+1556/1556 - 150s - loss: 1.4406 - accuracy: 0.4883 - val_loss: 1.0372 - val_accuracy: 0.6356
+
+Epoch 00002: saving model to /home/alex/Car_Classification/model/step1-02-1.0372.hdf5
+Epoch 3/40
+1556/1556 - 151s - loss: 1.3679 - accuracy: 0.5142 - val_loss: 0.9948 - val_accuracy: 0.6418
+
+Epoch 00003: saving model to /home/alex/Car_Classification/model/step1-03-0.9948.hdf5
+Epoch 4/40
+1556/1556 - 151s - loss: 1.3245 - accuracy: 0.5294 - val_loss: 0.9818 - val_accuracy: 0.6466
+
+Epoch 00004: saving model to /home/alex/Car_Classification/model/step1-04-0.9818.hdf5
+Epoch 5/40
+1556/1556 - 151s - loss: 1.2912 - accuracy: 0.5411 - val_loss: 0.9882 - val_accuracy: 0.6366
+
+Epoch 00005: saving model to /home/alex/Car_Classification/model/step1-05-0.9882.hdf5
+Epoch 6/40
+1556/1556 - 151s - loss: 1.2664 - accuracy: 0.5493 - val_loss: 0.9128 - val_accuracy: 0.6807
+
+Epoch 00006: saving model to /home/alex/Car_Classification/model/step1-06-0.9128.hdf5
+Epoch 7/40
+1556/1556 - 150s - loss: 1.2456 - accuracy: 0.5570 - val_loss: 0.8815 - val_accuracy: 0.6820
+
+Epoch 00007: saving model to /home/alex/Car_Classification/model/step1-07-0.8815.hdf5
+Epoch 8/40
+1556/1556 - 151s - loss: 1.2316 - accuracy: 0.5626 - val_loss: 0.8726 - val_accuracy: 0.6978
+
+Epoch 00008: saving model to /home/alex/Car_Classification/model/step1-08-0.8726.hdf5
+Epoch 9/40
+1556/1556 - 151s - loss: 1.2196 - accuracy: 0.5710 - val_loss: 0.8668 - val_accuracy: 0.6978
+
+Epoch 00009: saving model to /home/alex/Car_Classification/model/step1-09-0.8668.hdf5
+Epoch 10/40
+1556/1556 - 150s - loss: 1.1921 - accuracy: 0.5822 - val_loss: 0.8923 - val_accuracy: 0.6765
+
+Epoch 00010: saving model to /home/alex/Car_Classification/model/step1-10-0.8923.hdf5
+Epoch 11/40
+1556/1556 - 150s - loss: 1.1916 - accuracy: 0.5706 - val_loss: 0.8407 - val_accuracy: 0.7014
+
+Epoch 00011: saving model to /home/alex/Car_Classification/model/step1-11-0.8407.hdf5
+Epoch 12/40
+1556/1556 - 151s - loss: 1.1753 - accuracy: 0.5843 - val_loss: 0.8511 - val_accuracy: 0.7046
+
+Epoch 00012: saving model to /home/alex/Car_Classification/model/step1-12-0.8511.hdf5
+Epoch 13/40
+1556/1556 - 150s - loss: 1.1545 - accuracy: 0.5931 - val_loss: 0.8182 - val_accuracy: 0.7043
+
+Epoch 00013: saving model to /home/alex/Car_Classification/model/step1-13-0.8182.hdf5
+Epoch 14/40
+1556/1556 - 151s - loss: 1.1459 - accuracy: 0.5954 - val_loss: 0.7945 - val_accuracy: 0.7265
+
+Epoch 00014: saving model to /home/alex/Car_Classification/model/step1-14-0.7945.hdf5
+Epoch 15/40
+1556/1556 - 151s - loss: 1.1399 - accuracy: 0.5926 - val_loss: 0.8072 - val_accuracy: 0.7094
+
+Epoch 00015: saving model to /home/alex/Car_Classification/model/step1-15-0.8072.hdf5
+Epoch 16/40
+1556/1556 - 151s - loss: 1.1461 - accuracy: 0.5940 - val_loss: 0.7786 - val_accuracy: 0.7242
+
+Epoch 00016: saving model to /home/alex/Car_Classification/model/step1-16-0.7786.hdf5
+Epoch 17/40
+1556/1556 - 151s - loss: 1.1227 - accuracy: 0.6071 - val_loss: 0.7952 - val_accuracy: 0.7136
+
+Epoch 00017: saving model to /home/alex/Car_Classification/model/step1-17-0.7952.hdf5
+Epoch 18/40
+1556/1556 - 151s - loss: 1.1315 - accuracy: 0.5996 - val_loss: 0.8179 - val_accuracy: 0.7088
+
+Epoch 00018: saving model to /home/alex/Car_Classification/model/step1-18-0.8179.hdf5
+Epoch 19/40
+1556/1556 - 151s - loss: 1.1129 - accuracy: 0.6121 - val_loss: 0.7739 - val_accuracy: 0.7345
+
+Epoch 00019: saving model to /home/alex/Car_Classification/model/step1-19-0.7739.hdf5
+Epoch 20/40
+1556/1556 - 151s - loss: 1.1169 - accuracy: 0.6088 - val_loss: 0.8064 - val_accuracy: 0.7152
+
+Epoch 00020: saving model to /home/alex/Car_Classification/model/step1-20-0.8064.hdf5
+Epoch 21/40
+1556/1556 - 151s - loss: 1.1258 - accuracy: 0.6025 - val_loss: 0.7683 - val_accuracy: 0.7271
+
+Epoch 00021: saving model to /home/alex/Car_Classification/model/step1-21-0.7683.hdf5
+Epoch 22/40
+1556/1556 - 151s - loss: 1.1018 - accuracy: 0.6106 - val_loss: 0.7579 - val_accuracy: 0.7368
+
+Epoch 00022: saving model to /home/alex/Car_Classification/model/step1-22-0.7579.hdf5
+Epoch 23/40
+1556/1556 - 151s - loss: 1.1026 - accuracy: 0.6097 - val_loss: 0.7783 - val_accuracy: 0.7252
+
+Epoch 00023: saving model to /home/alex/Car_Classification/model/step1-23-0.7783.hdf5
+Epoch 24/40
+1556/1556 - 151s - loss: 1.0828 - accuracy: 0.6210 - val_loss: 0.7680 - val_accuracy: 0.7323
+
+Epoch 00024: saving model to /home/alex/Car_Classification/model/step1-24-0.7680.hdf5
+Epoch 25/40
+1556/1556 - 151s - loss: 1.1001 - accuracy: 0.6115 - val_loss: 0.7527 - val_accuracy: 0.7368
+
+Epoch 00025: saving model to /home/alex/Car_Classification/model/step1-25-0.7527.hdf5
+Epoch 26/40
+1556/1556 - 151s - loss: 1.0828 - accuracy: 0.6191 - val_loss: 0.7647 - val_accuracy: 0.7316
+
+Epoch 00026: saving model to /home/alex/Car_Classification/model/step1-26-0.7647.hdf5
+Epoch 27/40
+1556/1556 - 151s - loss: 1.0773 - accuracy: 0.6198 - val_loss: 0.7587 - val_accuracy: 0.7291
+
+Epoch 00027: saving model to /home/alex/Car_Classification/model/step1-27-0.7587.hdf5
+389/389 - 30s - loss: 0.7713 - accuracy: 0.7305
+Accuracy step1: 73.05%
+Input name of weights file: 

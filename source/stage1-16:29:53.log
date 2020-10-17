@@ -1,0 +1,12 @@
+Python       : 3.8.5 (default, Jul 28 2020, 12:59:40) 
+Numpy        : 1.18.5
+Tensorflow   : 2.4.0
+Keras        : 2.4.0
+1 Physical GPUs, 1 Logical GPUs
+Found 12452 images belonging to 10 classes.
+Found 3109 images belonging to 10 classes.
+Epoch 1/5
+1556/1556 - 160s - loss: 1.6988 - accuracy: 0.4058 - val_loss: 1.1456 - val_accuracy: 0.5854
+
+Epoch 00001: saving model to /home/alex/Car_Classification/model/step1-01-1.1456.hdf5
+Epoch 2/5

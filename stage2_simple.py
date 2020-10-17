@@ -3,9 +3,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-#import seaborn as sns
-import pickle
-import scipy.io
+#import pickle
+#import scipy.io
 from skimage import io
 import csv
 import sys
@@ -24,13 +23,13 @@ from tensorflow.keras.callbacks import Callback
 from tensorflow.keras import optimizers
 import efficientnet.tfkeras as efn
 
-from ImageDataAugmentor.image_data_augmentor import *
-import albumentations
+#from ImageDataAugmentor.image_data_augmentor import *
+#import albumentations
 
 from sklearn.model_selection import train_test_split
 
-import PIL
-from PIL import ImageOps, ImageFilter
+#import PIL
+#from PIL import ImageOps, ImageFilter
 
 # # Основные настройки
 
@@ -51,10 +50,11 @@ BATCH_SIZE           = 8 # уменьшаем batch если сеть больш
 BATCH_SIZE_STEP4     = 2 # Размер batch на шаге с увеличенными изображениями
 
 # Epochs
-EPOCHS_STEP1         = 20  
-EPOCHS_STEP2         = 20  
-EPOCHS_STEP3         = 20   
-EPOCHS_STEP4         = 7  
+  
+EPOCHS_STEP1         = 1  
+EPOCHS_STEP2         = 1  
+EPOCHS_STEP3         = 1    
+EPOCHS_STEP4         = 1  
 
 # Learning Rates
 LR_STEP1             = 1e-3
@@ -62,12 +62,6 @@ LR_STEP2             = 1e-4
 LR_STEP3             = 1e-5
 LR_STEP4             = 1e-5
 
-# Learning Rate One Cycle Policy
-MAX_MOMENTUM = 0.98
-BASE_MOMENTUM = 0.85
-CYCLICAL_MOMENTUM = True
-AUGMENT = True
-CYCLES = 2.35
 
 # Test-validation split
 VAL_SPLIT            = 0.2 # сколько данных выделяем на тест = 20%
@@ -77,130 +71,53 @@ CLASS_NUM            = 10  # количество классов в нашей �
 IMG_SIZE             = 250 # какого размера подаем изображения в сеть
 IMG_SIZE_STEP4       = 512
 IMG_CHANNELS         = 3   # у RGB 3 канала
-input_shape          = (IMG_SIZE, IMG_SIZE, IMG_CHANNELS)
+input_shape          = (IMG_SIZE_STEP4, IMG_SIZE_STEP4, IMG_CHANNELS)
 
 
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)  
 PYTHONHASHSEED = 0
 DATA_PATH = '/home/alex/Car_Classification/input/'
-
+MODEL_PATH = '/home/alex/Car_Classification/model/'
 sample_submission = pd.read_csv(DATA_PATH+"sample-submission.csv")
 
-model = keras.models.load_model('../working/model_step3.hdf5')
-model.load_weights('best_model.hdf5')
-
-# ## Step - увеличение размера изображения
+# Step - увеличение размера изображения
 
 # Увеличим размер изображения и уменьшим уровень аугментации
 
 input_shape_step4 = (IMG_SIZE_STEP4, IMG_SIZE_STEP4, IMG_CHANNELS)
 
-class CyclicLR(keras.callbacks.Callback):
-    
-    def __init__(self,base_lr, max_lr, step_size, base_m, max_m, cyclical_momentum):
- 
-        self.base_lr = base_lr
-        self.max_lr = max_lr
-        self.base_m = base_m
-        self.max_m = max_m
-        self.cyclical_momentum = cyclical_momentum
-        self.step_size = step_size
-        
-        self.clr_iterations = 0.
-        self.cm_iterations = 0.
-        self.trn_iterations = 0.
-        self.history = {}
-        
-    def clr(self):
-        
-        cycle = np.floor(1+self.clr_iterations/(2*self.step_size))
-        
-        if cycle == 2:
-            x = np.abs(self.clr_iterations/self.step_size - 2*cycle + 1)          
-            return self.base_lr-(self.base_lr-self.base_lr/100)*np.maximum(0,(1-x))
-        
-        else:
-            x = np.abs(self.clr_iterations/self.step_size - 2*cycle + 1)
-            return self.base_lr + (self.max_lr-self.base_lr)*np.maximum(0,(1-x))
-    
-    def cm(self):
-        
-        cycle = np.floor(1+self.clr_iterations/(2*self.step_size))
-        
-        if cycle == 2:
-            
-            x = np.abs(self.clr_iterations/self.step_size - 2*cycle + 1) 
-            return self.max_m
-        
-        else:
-            x = np.abs(self.clr_iterations/self.step_size - 2*cycle + 1)
-            return self.max_m - (self.max_m-self.base_m)*np.maximum(0,(1-x))
-        
-        
-    def on_train_begin(self, logs={}):
-        logs = logs or {}
+# Пересобираем модель под новый input_shape
 
-        if self.clr_iterations == 0:
-            K.set_value(self.model.optimizer.lr, self.base_lr)
-        else:
-            K.set_value(self.model.optimizer.lr, self.clr())
-            
-        if self.cyclical_momentum == True:
-            if self.clr_iterations == 0:
-                K.set_value(self.model.optimizer.momentum, self.cm())
-            else:
-                K.set_value(self.model.optimizer.momentum, self.cm())
-            
-            
-    def on_batch_begin(self, batch, logs=None):
-        
-        logs = logs or {}
-        self.trn_iterations += 1
-        self.clr_iterations += 1
+base_model = efn.EfficientNetB6(
+    weights=None, # Веса не подгружаем, т.к. будем загружать уже обученные
+    include_top=False,  # Выходной слой (голову) будем менять т.к. у нас другие классы и их количество
+    input_shape=input_shape_step4)
 
-        self.history.setdefault('lr', []).append(K.get_value(self.model.optimizer.lr))
-        self.history.setdefault('iterations', []).append(self.trn_iterations)
-        
-        if self.cyclical_momentum == True:
-            self.history.setdefault('momentum', []).append(K.get_value(self.model.optimizer.momentum))
+model=M.Sequential()
+model.add(base_model)
+model.add(L.GlobalAveragePooling2D(),) 
+model.add(L.Dense(256, activation='relu'))
+model.add(L.BatchNormalization())
+model.add(L.Dropout(0.25))
+model.add(L.Dense(CLASS_NUM, activation='softmax'))
 
-        for k, v in logs.items():
-            self.history.setdefault(k, []).append(v)
-        
-        K.set_value(self.model.optimizer.lr, self.clr())
-        
-        if self.cyclical_momentum == True:
-            K.set_value(self.model.optimizer.momentum, self.cm())
+while not os.path.isfile(model_name := input('Input name of model file: ')):
+    print(model_name, "File not exist!")
+model = keras.models.load_model(model_name)
 
+train_datagen = ImageDataGenerator(
+    rescale=1. / 255, 
+    rotation_range = 30,
+    #shear_range=0.2,
+    #zoom_range=[0.75,1.25],
+    #brightness_range=[0.5, 1.5],
+    #width_shift_range=0.1,
+    #height_shift_range=0.1,
+    validation_split=VAL_SPLIT,
+    horizontal_flip=True)
 
-AUGMENTATIONS = albumentations.Compose([
-    albumentations.HorizontalFlip(p=0.5),
-    albumentations.Rotate(limit=30, interpolation=1, border_mode=4, value=None, mask_value=None, always_apply=False, p=0.5),
-    # albumentations.OneOf([
-    #     albumentations.CenterCrop(height=250, width=200),
-    #     albumentations.CenterCrop(height=200, width=250),
-    # ],p=0.5),
-    # albumentations.OneOf([
-    #     albumentations.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3),
-    #     albumentations.RandomBrightnessContrast(brightness_limit=0.1, contrast_limit=0.1)
-    # ],p=0.5),
-    # albumentations.GaussianBlur(p=0.05),
-    # albumentations.HueSaturationValue(p=0.5),
-    # albumentations.RGBShift(p=0.5),
-    # albumentations.FancyPCA(alpha=0.1, always_apply=False, p=0.5),
-    # albumentations.Resize(IMG_SIZE, IMG_SIZE)
-])
-
-train_datagen = ImageDataAugmentor(
-        rescale=1./255,
-        augment = AUGMENTATIONS,
-        validation_split=VAL_SPLIT,
-        )
-        
-test_datagen = ImageDataAugmentor(rescale=1./255)
-
-
+test_datagen = ImageDataGenerator(rescale=1. / 255)
 
 train_generator = train_datagen.flow_from_directory(
     DATA_PATH+'train/',      # директория где расположены папки с картинками 
@@ -229,35 +146,18 @@ batch_size = BATCH_SIZE_STEP4
 epochs = EPOCHS_STEP4
 base_lr = LR_STEP4
 max_lr = base_lr*10
-max_m = MAX_MOMENTUM
-base_m = BASE_MOMENTUM
 
-cyclical_momentum = CYCLICAL_MOMENTUM
-augment = AUGMENT
-cycles = CYCLES
 
 # Расчет количества итерация и шага изменения learning rate
 iterations = round(train_generator.samples//train_generator.batch_size*epochs)
 iterations = list(range(0,iterations+1))
-step_size = len(iterations)/(CYCLES)
+model.compile(loss="categorical_crossentropy", optimizer=optimizers.Adam(lr=LR_STEP4), metrics=["accuracy"])  
 
-model.compile(loss="categorical_crossentropy", optimizer=optimizers.SGD(lr=base_lr, momentum=BASE_MOMENTUM), metrics=["accuracy"])
 
-model.load_weights('best_model.hdf5') # Подгружаем ранее обученные веса
-
-clr =  CyclicLR(
-    base_lr=base_lr,
-    max_lr=max_lr,
-    step_size=step_size,
-    max_m=max_m,
-    base_m=base_m,
-    cyclical_momentum=cyclical_momentum
-)
-    
 # Добавим ModelCheckpoint чтоб сохранять прогресс обучения модели и можно было потом подгрузить и дообучить модель.    
-checkpoint = ModelCheckpoint('best_model.hdf5' , monitor = ['val_accuracy'] , verbose = 1  , mode = 'max')
+checkpoint = ModelCheckpoint(MODEL_PATH+'step4-{epoch:02d}-{val_loss:.4f}.hdf5' , monitor = ['val_accuracy'] , verbose = 1  , mode = 'max')
 earlystop = EarlyStopping(monitor='val_accuracy', patience=5, restore_best_weights=True)
-callbacks_list = [checkpoint, earlystop, clr]
+callbacks_list = [checkpoint, earlystop]
 
 # Обучаем
 history = model.fit(
@@ -271,10 +171,11 @@ history = model.fit(
 
 
 
-model.save('../working/model_step4.hdf5')
-model.load_weights('best_model.hdf5')
+model.save(MODEL_PATH+'model_step4.hdf5')
+while not os.path.isfile(weights_name := input('Input name of weights file: ')):
+    print("File not exist!")
 
-
+model.load_weights(weights_name)
 
 scores = model.evaluate_generator(test_generator, verbose=1)
 print("Accuracy: %.2f%%" % (scores[1]*100))
@@ -300,7 +201,7 @@ test_sub_generator = test_datagen.flow_from_dataframe(
 
 
 test_sub_generator.reset()
-predictions = model.predict_generator(test_sub_generator, steps=len(test_sub_generator), verbose=1) 
+predictions = model.predict(test_sub_generator, steps=len(test_sub_generator), verbose=1) 
 predictions = np.argmax(predictions, axis=-1) #multiple categories
 label_map = (train_generator.class_indices)
 label_map = dict((v,k) for k,v in label_map.items()) #flip k,v
@@ -326,34 +227,16 @@ submission.head()
 # Взяв среднее значение из нескольких предсказаний получим итоговое предсказание.
 
 
-model.load_weights('best_model.hdf5')
-
-
-
-AUGMENTATIONS = albumentations.Compose([
-    albumentations.HorizontalFlip(p=0.5),
-    albumentations.Rotate(limit=30, interpolation=1, border_mode=4, value=None, mask_value=None, always_apply=False, p=0.5),
-    albumentations.OneOf([
-        albumentations.CenterCrop(height=250, width=200),
-        albumentations.CenterCrop(height=200, width=250),
-    ],p=0.5),
-    albumentations.OneOf([
-        albumentations.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3),
-        albumentations.RandomBrightnessContrast(brightness_limit=0.1, contrast_limit=0.1)
-    ],p=0.5),
-    albumentations.GaussianBlur(p=0.05),
-    albumentations.HueSaturationValue(p=0.5),
-    albumentations.RGBShift(p=0.5),
-    albumentations.FancyPCA(alpha=0.1, always_apply=False, p=0.5),
-    albumentations.Resize(IMG_SIZE, IMG_SIZE)
-])
-      
-test_datagen = ImageDataAugmentor( 
-    rescale=1./255,
-    augment = AUGMENTATIONS,
+test_datagen = ImageDataGenerator( 
+    rescale=1. / 255, 
+    rotation_range = 30,
+    shear_range=0.2,
+    zoom_range=[0.75,1.25],
+    brightness_range=[0.5, 1.5],
+    width_shift_range=0.1,
+    height_shift_range=0.1,
     validation_split=VAL_SPLIT,
-)
-
+    horizontal_flip=True)
 
 
 test_sub_generator = test_datagen.flow_from_dataframe( 
@@ -369,11 +252,11 @@ test_sub_generator = test_datagen.flow_from_dataframe(
 
 
 
-tta_steps = 10 # берем среднее из 10 предсказаний
+tta_steps = 1 # берем среднее из 10 предсказаний
 predictions = []
 
 for i in range(tta_steps):
-    preds = model.predict_generator(test_sub_generator, steps=len(test_sub_generator), verbose=1) 
+    preds = model.predict(test_sub_generator, steps=len(test_sub_generator), verbose=1) 
     predictions.append(preds)
 
 pred = np.mean(predictions, axis=0)

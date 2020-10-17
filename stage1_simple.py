@@ -1,10 +1,7 @@
-# # Классификация изображений
-# 
-# # Установка и импорт необходимых библиотек
+#Скрипт - первая часть. Шаги 1-3
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import sys
 import os
 
@@ -24,14 +21,14 @@ from sklearn.model_selection import train_test_split
 import PIL
 from PIL import ImageOps, ImageFilter
 
-# увеличим дефолтный размер графиков
-
 print('Python       :', sys.version.split('\n')[0])
 print('Numpy        :', np.__version__)
 print('Tensorflow   :', tf.__version__)
 print('Keras        :', keras.__version__)
 
 # Ограничеваем использование памяти GPU TensorFlow
+# в противном случае на первой же операции резервируется вся память
+# и обучение не может быть выполнено при любом размере batch
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -45,35 +42,29 @@ if gpus:
     # Memory growth must be set before GPUs have been initialized
     print(e)
 
-# # Основные настройки
+# Основные настройки
 
 # Batch size
-BATCH_SIZE           = 8 # уменьшаем batch если сеть большая, иначе не влезет в память на GPU
-BATCH_SIZE_STEP4     = 2 # Размер batch на шаге с увеличенными изображениями
+BATCH_SIZE           = 8 
 
 # Epochs
-EPOCHS_STEP1         = 20  
-EPOCHS_STEP2         = 20  
-EPOCHS_STEP3         = 20   
+EPOCHS_STEP1         = 1  
+EPOCHS_STEP2         = 1  
+EPOCHS_STEP3         = 1   
 
 # Learning Rates
 LR_STEP1             = 0.001
 LR_STEP2             = 0.0001
 LR_STEP3             = 0.00001
-LR_STEP4             = 1e-5
 
 # Test-validation split
+
 VAL_SPLIT            = 0.2 # сколько данных выделяем на тест = 20%
-
 CLASS_NUM            = 10  # количество классов в нашей задаче
-
 IMG_SIZE             = 250 # какого размера подаем изображения в сеть
-IMG_SIZE_STEP4       = 512
 IMG_CHANNELS         = 3   # у RGB 3 канала
 input_shape          = (IMG_SIZE, IMG_SIZE, IMG_CHANNELS)
-
-
-RANDOM_SEED = 42
+RANDOM_SEED = 1488
 np.random.seed(RANDOM_SEED)  
 PYTHONHASHSEED = 0
 
@@ -116,14 +107,11 @@ test_generator = train_datagen.flow_from_directory(
     seed=RANDOM_SEED,
     subset='validation') # set as validation data
 
-
-
 # # Построение модели
 
-# На момент выполнения задания сеть EfficientNetB6 все ещё является оптимальным выбором, 
-# если брать во внимание точность предсказаний и время работы.
-
-# Загружаем предобученную сеть EfficientNetB6:
+# За основу берем сеть EfficientB6 в реализации https://github.com/qubvel/efficientnet
+# 
+# 
 
 
 base_model = efn.EfficientNetB6(
@@ -132,19 +120,16 @@ base_model = efn.EfficientNetB6(
     input_shape=input_shape)
 
 
-# Для начала заморозим веса EfficientNetB6 и обучим только "голову". 
-# Делаем это для того, чтобы хорошо обученные признаки на Imagenet не затирались в самом начале нашего обучения
+# Заморозим веса imagenet в базовой модели, чтобы она работала в качестве feature extractor 
+# и наша голова обучалась делать классификацию на наши 10 классов
 
 base_model.trainable = False
 
-# Устанавливаем "голову"
+# Устанавливаем "голову" в минималистическо классической конфигурации
 
 model=M.Sequential()
 model.add(base_model)
-model.add(L.GlobalAveragePooling2D(),) # объединяем все признаки в единый вектор 
-
-# Экспериментируем с архитектурой - добавляем ещё один полносвязный слой, dropout и batch-нормализацию
-
+model.add(L.GlobalAveragePooling2D(),) 
 model.add(L.Dense(256, activation='relu'))
 model.add(L.BatchNormalization())
 model.add(L.Dropout(0.25))
@@ -160,7 +145,6 @@ model.add(L.Dense(CLASS_NUM, activation='softmax'))
 model.compile(loss="categorical_crossentropy", optimizer=optimizers.Adam(lr=LR_STEP1), metrics=["accuracy"])
 
 # Добавим ModelCheckpoint чтоб сохранять прогресс обучения модели и можно было потом подгрузить и дообучить модель.
-
 
 checkpoint = ModelCheckpoint(MODEL_PATH+'step1-{epoch:02d}-{val_loss:.4f}.hdf5' , monitor = ['val_accuracy'] , verbose = 1, mode = 'max')
 earlystop = EarlyStopping(monitor='val_accuracy', patience=5, restore_best_weights=True)
@@ -179,16 +163,19 @@ history = model.fit(
 scores = model.evaluate(test_generator, verbose=2)
 print("Accuracy step1: %.2f%%" % (scores[1]*100))
 
-# Сохраним итоговую сеть и подгрузим лучшую итерацию в обучении (best_model)
-model.save('../working/model_step1.hdf5')
+# Сохраняем обученную модель на первом шаге
+
+model.save('model/model_step1.hdf5')
+
+# Запрашиваем какой файл с весами загрузить как лучший на первом шаге обучения
 
 while not os.path.isfile(weights_name := input('Input name of weights file: ')):
     print("File not exist!")
 
-model.load_weights(MODEL_PATH+weights_name)
+model.load_weights(weights_name)
 
 
-# ## Step 2 - FineTuning - обучение половины весов EfficientNetb6
+# Step 2 - FineTuning - обучение половины весов EfficientNetb6
 
 # Разморозим базовую модель
 base_model.trainable = True
@@ -221,20 +208,17 @@ history = model.fit(
 scores = model.evaluate(test_generator, verbose=2)
 print("Accuracy step2: %.2f%%" % (scores[1]*100))
 
-# Сохраним модель
 
-model.save('../working/model_step2.hdf5')
+model.save('model/model_step2.hdf5')
 
 while not os.path.isfile(weights_name := input('Input name of weights file: ')):
     print("File not exist!")
-model.load_weights(MODEL_PATH + weights_name)
+model.load_weights(weights_name)
 
 
-# ## Step 3 - FineTuning - разморозка всей сети EfficientNetB6 и дообучение
+# Step 3 - FineTuning - разморозка всей сети EfficientNetB6 и дообучение
 
 # Разморозим базовую модель
-
-
 base_model.trainable = True
 
 LR=0.00001
@@ -251,7 +235,7 @@ history = model.fit(
     verbose=2
 )
 
-model.save(MODEL_PATH+'model_step3.hdf5')
+model.save('model/model_step3.hdf5')
 
 scores = model.evaluate(test_generator, verbose=2)
 print("Accuracy step3: %.2f%%" % (scores[1]*100))
