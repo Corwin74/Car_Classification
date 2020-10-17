@@ -252,7 +252,7 @@ test_sub_generator = test_datagen.flow_from_dataframe(
 
 
 
-tta_steps = 1 # берем среднее из 10 предсказаний
+tta_steps = 7 # берем среднее из 7 предсказаний
 predictions = []
 
 for i in range(tta_steps):
